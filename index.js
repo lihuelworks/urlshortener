@@ -5,18 +5,17 @@ const app = express();
 const validUrl = require('valid-url');
 const shortid = require('shortid');
 const sqlite3 = require('sqlite3').verbose();
+const dns = require('dns');
 
 const db = new sqlite3.Database('./urlDatabase.db');
 
-// Create table if it doesn't exist
 db.run('CREATE TABLE IF NOT EXISTS urls (shortid TEXT, original TEXT UNIQUE)');
 
-// Basic Configuration
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json()); // To handle JSON body parsing
+app.use(express.json());
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 
@@ -24,56 +23,55 @@ app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// Your first API endpoint
 app.get('/api/hello', function (req, res) {
   res.json({ greeting: 'hello API' });
 });
 
-// POST route - check for redundancy and store URL in SQLite
 app.post('/api/shorturl', function (req, res) {
   const { url } = req.body;
 
-  // Check if URL is valid
   if (!validUrl.isUri(url)) {
     return res.json({ error: 'invalid url' });
   }
 
-  // Check if the URL already exists in the database
-  db.get('SELECT * FROM urls WHERE original = ?', [url], (err, row) => {
+  const urlObj = new URL(url);
+  dns.lookup(urlObj.hostname, (err) => {
     if (err) {
       return res.json({ error: 'invalid url' });
     }
 
-    if (row) {
-      // URL already exists, return the existing short URL
-      return res.json({ original_url: url, short_url: `${req.protocol}://${req.get('host')}/api/shorturl/${row.shortid}` });
-    } else {
-      // URL does not exist, generate a new short ID and store it
-      const newShortId = shortid.generate();
-      db.run('INSERT INTO urls (shortid, original) VALUES (?, ?)', [newShortId, url], function (err) {
-        if (err) {
-          return res.json({ error: 'invalid url' });
-        }
-        res.json({ original_url: url, short_url: `${req.protocol}://${req.get('host')}/api/shorturl/${newShortId}` });
-      });
-    }
+    db.get('SELECT * FROM urls WHERE original = ?', [url], (err, row) => {
+      if (err) {
+        return res.json({ error: 'invalid url' });
+      }
+
+      if (row) {
+        res.json({ original_url: url, short_url: `${row.shortid}` });
+      } else {
+        const newShortId = shortid.generate();
+        db.run('INSERT INTO urls (shortid, original) VALUES (?, ?)', [newShortId, url], function (err) {
+          if (err) {
+            return res.json({ error: 'invalid url' });
+          }
+          res.json({ original_url: url, short_url: `${newShortId}` });
+        });
+      }
+    });
   });
 });
 
-// GET route - retrieve original URL from SQLite and redirect
 app.get('/api/shorturl/:shortid', function (req, res) {
   const { shortid } = req.params;
 
   db.get('SELECT * FROM urls WHERE shortid = ?', [shortid], (err, row) => {
     if (err) {
-      return res.json({ error: 'invalid url'  });
+      return res.json({ error: 'invalid url' });
     }
 
     if (row) {
-      // Redirection to the original URL
-      return res.redirect(row.original); 
+      return res.redirect(row.original);
     } else {
-      return res.json({ error: 'invalid url'  });
+      return res.json({ error: 'invalid url' });
     }
   });
 });
