@@ -1,19 +1,33 @@
 {
-  "name": "shorturl",
+  "name": "lihuelworks-shorturl",
   "version": "0.0.3",
-  "description": "API project for freeCodeCamp",
+  "description": "A highly-efficient and lightweight URL Shortener Microservice built with Node.js, Express, and SQLite. Ideal for demonstrating backend API skills and URL management.",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js"
+    "start": "node --watch index.js" 
   },
   "dependencies": {
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "shortid": "^2.2.17",
-    "sqlite3": "^5.1.7",
-    "valid-url": "^1.0.9"
+    "body-parser": "^1.19.0", 
+    "cors": "^2.8.5", 
+    "dotenv": "^8.2.0", 
+    "express": "^4.17.1", 
+    "shortid": "^2.2.17", 
+    "sqlite3": "^5.1.7", 
+    "valid-url": "^1.0.9" 
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "URL Shortener",
+    "API",
+    "Node.js",
+    "Express",
+    "SQLite",
+    "Short URLs"
+  ],
+  "author": "Mathias Governa",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lihuelworks/urlshortener"
+  },
+  "homepage": "https://your-project-homepage.com"
 }
