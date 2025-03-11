@@ -35,13 +35,13 @@ app.post('/api/shorturl', function (req, res) {
 
   // Check if URL is valid
   if (!validUrl.isUri(url)) {
-    return res.status(400).json({ error: 'invalid url' });
+    return res.json({ error: 'invalid url' });
   }
 
   // Check if the URL already exists in the database
   db.get('SELECT * FROM urls WHERE original = ?', [url], (err, row) => {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      return res.json({ error: 'invalid url' });
     }
 
     if (row) {
@@ -52,7 +52,7 @@ app.post('/api/shorturl', function (req, res) {
       const newShortId = shortid.generate();
       db.run('INSERT INTO urls (shortid, original) VALUES (?, ?)', [newShortId, url], function (err) {
         if (err) {
-          return res.status(500).json({ error: 'Failed to store URL' });
+          return res.json({ error: 'invalid url' });
         }
         res.json({ original_url: url, short_url: `${req.protocol}://${req.get('host')}/api/shorturl/${newShortId}` });
       });
@@ -66,14 +66,14 @@ app.get('/api/shorturl/:shortid', function (req, res) {
 
   db.get('SELECT * FROM urls WHERE shortid = ?', [shortid], (err, row) => {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      return res.json({ error: 'invalid url'  });
     }
 
     if (row) {
       // Redirection to the original URL
       return res.redirect(row.original); 
     } else {
-      return res.status(404).json({ error: 'Short URL not found' });
+      return res.json({ error: 'invalid url'  });
     }
   });
 });
